@@ -1,5 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createTodo, getTodos, toggleDone } from "./appThunk";
+import {
+  createTodo,
+  deleteTodo,
+  getTodos,
+  toggleDone,
+  updateTodo,
+} from "./appThunk";
 
 const appSlice = createSlice({
   name: "appSlice",
@@ -14,22 +20,25 @@ const appSlice = createSlice({
     setNewTodo: (state, action) => {
       state.newTodo = action.payload;
     },
-    // CreateTodo.jsx에서 setNewTodo를 옮김
   },
+  // CreateTodo.jsx에서 setNewTodo를 옮김
   extraReducers: (builder) => {
     builder.addCase(getTodos.pending, (state) => {
       state.isLoading = true;
-      // 진행중
     });
+    // 진행중
     builder.addCase(getTodos.fulfilled, (state, action) => {
       state.todos = action.payload;
+      state.updateToggles = action.payload.map(() => {
+        return false;
+      });
       state.isLoading = false;
-      // 성공
     });
+    // 성공
     builder.addCase(getTodos.rejected, (state) => {
       state.isLoading = false;
-      // 실패
     });
+    // 실패
     builder.addCase(createTodo.pending, (state) => {
       state.isLoading = true;
     });
@@ -57,10 +66,37 @@ const appSlice = createSlice({
     builder.addCase(toggleDone.rejected, (state) => {
       state.isLoading = false;
     });
+    builder.addCase(updateTodo.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(updateTodo.fulfilled, (state, action) => {
+      state.todos = state.todos.map((v) => {
+        if (v.id === action.payload.id) {
+          return action.payload;
+        } else {
+          return v;
+        }
+      });
+      state.isLoading = false;
+    });
+    builder.addCase(updateTodo.rejected, (state) => {
+      state.isLoading = false;
+    });
+    builder.addCase(deleteTodo.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(deleteTodo.fulfilled, (state, action) => {
+      // action.payload = "Deleted todo."
+      state.todos = state.todos.filter((v) => {
+        if (v.id !== action.payload) {
+          return v;
+        }
+      });
+      state.isLoading = false;
+    });
+    builder.addCase(deleteTodo.rejected, (state) => {
+      state.isLoading = false;
+    });
   },
 });
 // state는 상태값이고, action은 값을 변경하는 행동을 의미함. action.payload는 action의 속성값을 의미함.
-
-export const { setNewTodo } = appSlice.actions;
-
-export default appSlice;
